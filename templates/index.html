@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer 360 Insight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <div class="logo-section">
+                    <img src="{{ url_for('static', filename='360logo.png') }}" alt="Logo" class="logo">
+                    <div class="title-section">
+                        <h1>Customer 360 Insight</h1>
+                        <p>Payment Status & Analytics Dashboard</p>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="db-section">
+                    <span class="db-label">Active Databases:</span>
+                    <div id="databasesList" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <span style="color: #94a3b8;">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- File Upload Section -->
+        <div class="card">
+            <h2>Upload Data Files</h2>
+            <div class="file-upload-grid">
+                <div class="form-group">
+                    <label>Disbursed CSV</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="disbursedFile" accept=".csv">
+                        <label for="disbursedFile" class="file-input-label" id="disbursedLabel">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span class="file-name">Choose file</span>
+                            <span class="file-hint">Drop file here or click to browse</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Collection CSV</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="collectionFile" accept=".csv">
+                        <label for="collectionFile" class="file-input-label" id="collectionLabel">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span class="file-name">Choose file</span>
+                            <span class="file-hint">Drop file here or click to browse</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="processBtn" onclick="processFiles()">
+                    <span id="processBtnText">Process Files</span>
+                </button>
+            </div>
+
+            <div id="uploadResult"></div>
+        </div>
+
+        <!-- PAN Search Section -->
+        <div class="card">
+            <h2>PAN Search</h2>
+            <div class="search-row">
+                <div class="form-group">
+                    <label>PAN Number</label>
+                    <input type="text" id="panInput" placeholder="e.g. BBUPM2364P">
+                </div>
+                <button class="btn" id="searchBtn" onclick="searchPAN()">
+                    <span id="searchBtnText">Search</span>
+                </button>
+            </div>
+
+            <div id="searchResult"></div>
+        </div>
+
+        <!-- SQL Query Section -->
+        <div class="card">
+            <h2>SQL Query (SELECT Only)</h2>
+            <div class="form-group">
+                <label>Query Editor</label>
+                <textarea id="sqlInput" placeholder="SELECT * FROM eli_disbursed WHERE LeadID = '123'"></textarea>
+                <small style="color: #64748b;">Only SELECT queries allowed. INSERT, UPDATE, DELETE, DROP are
+                    blocked.</small>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="queryBtn" onclick="runQuery()">
+                    <span id="queryBtnText">Run Query</span>
+                </button>
+                <button class="btn btn-success hidden" id="exportBtn" onclick="exportResults()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export CSV
+                </button>
+            </div>
+
+            <div id="queryResult"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>
