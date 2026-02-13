@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer 360 Insight</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='360logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
 </head>
 
 <body>
@@ -82,7 +83,7 @@
             <div class="search-row">
                 <div class="form-group">
                     <label>PAN Number</label>
-                    <input type="text" id="panInput" placeholder="e.g. BBUPM2364P">
+                    <input type="text" id="panInput">
                 </div>
                 <button class="btn" id="searchBtn" onclick="searchPAN()">
                     <span id="searchBtnText">Search</span>
@@ -97,7 +98,7 @@
             <h2>SQL Query (SELECT Only)</h2>
             <div class="form-group">
                 <label>Query Editor</label>
-                <textarea id="sqlInput" placeholder="SELECT * FROM eli_disbursed WHERE LeadID = '123'"></textarea>
+                <textarea id="sqlInput"></textarea>
                 <small style="color: #64748b;">Only SELECT queries allowed. INSERT, UPDATE, DELETE, DROP are
                     blocked.</small>
             </div>
@@ -121,7 +122,7 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=2"></script>
 </body>
 
 </html>

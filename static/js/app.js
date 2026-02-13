@@ -132,7 +132,7 @@ async function searchPAN() {
 
         if (data.success) {
             currentResults = data.records;
-            displayResults('searchResult', data.records, data.pan, data.total_records);
+            displayResults('searchResult', data.records, data.pan, data.total_records, false); // static columns
         } else {
             showAlert('searchResult', data.error || 'Search failed', 'error');
         }
@@ -164,7 +164,7 @@ async function runQuery() {
 
         if (data.success) {
             currentResults = data.records;
-            displayResults('queryResult', data.records, null, data.total_records);
+            displayResults('queryResult', data.records, null, data.total_records, true); // dynamic columns
             document.getElementById('exportBtn').classList.remove('hidden');
         } else {
             showAlert('queryResult', data.error || 'Query failed', 'error');
@@ -210,8 +210,8 @@ async function exportResults() {
     }
 }
 
-// Display results in table
-function displayResults(elementId, records, pan, total) {
+// Display results in table with optional dynamic columns
+function displayResults(elementId, records, pan, total, useDynamicColumns = false) {
     const container = document.getElementById(elementId);
 
     if (records.length === 0) {
@@ -219,8 +219,8 @@ function displayResults(elementId, records, pan, total) {
         return;
     }
 
-    // Define column order and display names
-    const columnConfig = [
+    // Static column configuration for PAN search
+    const staticColumnConfig = [
         { key: 'Name', label: 'Name' },
         { key: 'Email', label: 'Email' },
         { key: 'Mobile', label: 'Mobile' },
@@ -232,6 +232,60 @@ function displayResults(elementId, records, pan, total) {
         { key: 'Product', label: 'Product' }
     ];
 
+    let columnOrder;
+
+    if (useDynamicColumns) {
+        // Extract all unique columns from records for SQL queries
+        const columnSet = new Set();
+        columnOrder = [];
+
+        records.forEach(record => {
+            Object.keys(record).forEach(key => {
+                const lowerKey = key.toLowerCase();
+                if (!columnSet.has(lowerKey)) {
+                    columnSet.add(lowerKey);
+                    columnOrder.push(key);
+                }
+            });
+        });
+    } else {
+        // Use static columns for PAN search
+        columnOrder = staticColumnConfig.map(col => col.key);
+    }
+
+    // Define display names for common columns
+    const displayNames = {
+        'name': 'Name',
+        'email': 'Email',
+        'mobile': 'Mobile',
+        'loanamount': 'Loan Amount',
+        'loan_amount': 'Loan Amount',
+        'repaydate': 'Repay Date',
+        'repay_date': 'Repay Date',
+        'collectiondate': 'Collection Date',
+        'collected_date': 'Collection Date',
+        'paymentstatus': 'Payment Status',
+        'status': 'Status',
+        'product': 'Product',
+        'pancard': 'PAN',
+        'leadid': 'Lead ID',
+        'loan_no': 'Loan No',
+        'branch': 'Branch',
+        'disbursed_date': 'Disbursed Date',
+        'collected_amount': 'Collected Amount',
+        'created_at': 'Created At'
+    };
+
+    // Get display name for a column
+    function getDisplayName(col) {
+        if (!useDynamicColumns) {
+            const staticCol = staticColumnConfig.find(c => c.key === col);
+            if (staticCol) return staticCol.label;
+        }
+        return displayNames[col.toLowerCase()] || col;
+    }
+
+    // Build table HTML
     let html = `
         <div class="stats-bar">
             ${pan ? `<div class="stat-item"><span class="stat-label">PAN</span><span class="stat-value">${pan}</span></div>` : ''}
@@ -240,19 +294,23 @@ function displayResults(elementId, records, pan, total) {
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>${columnConfig.map(col => `<th>${col.label}</th>`).join('')}</tr>
+                    <tr>${columnOrder.map(col => `<th>${getDisplayName(col)}</th>`).join('')}</tr>
                 </thead>
                 <tbody>
                     ${records.map((record) => {
-        const product = record.Product || '';
-        const status = (record.PaymentStatus || '').toLowerCase().replace(/ /g, '_');
+        const product = record.Product || record.product || '';
+        const status = (record.PaymentStatus || record.paymentstatus || '').toLowerCase().replace(/ /g, '_');
         const rowClass = product ? `product-${product.toLowerCase()}` : '';
 
-        return `<tr class="${rowClass}">${columnConfig.map(col => {
-            let value = record[col.key];
-            if (value === null || value === undefined) value = '-';
+        return `<tr class="${rowClass}">${columnOrder.map(col => {
+            // Case-insensitive key lookup
+            const actualKey = Object.keys(record).find(k => k.toLowerCase() === col.toLowerCase()) || col;
+            let value = record[actualKey];
+            if (value === null || value === undefined || value === '') value = '-';
 
-            if (col.key === 'PaymentStatus' && value !== '-') {
+            // Special formatting for PaymentStatus
+            const isPaymentStatus = col.toLowerCase() === 'paymentstatus';
+            if (isPaymentStatus && value !== '-') {
                 return `<td><span class="status-badge status-${status}">${value}</span></td>`;
             }
 

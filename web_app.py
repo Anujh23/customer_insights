@@ -16,6 +16,7 @@ from database import (
     search_pan_pg,
     list_products_pg,
     run_sql_query_pg,
+    get_table_columns,
 )
 
 # Configure logging
@@ -55,20 +56,52 @@ def upload_files():
         collection_df = pd.read_csv(collection_file, dtype=str)
 
         # Infer product from loan number prefix (e.g., ELI212... -> ELI)
-        loan_no = str(disbursed_df.iloc[0].get('Loan No', '')).strip()
+        loan_no = str(
+            disbursed_df.iloc[0].get('Loan No', disbursed_df.iloc[0].get('Loan_No', ''))
+        ).strip()
         product = loan_no[:3].upper() if len(loan_no) >= 3 else 'UNK'
 
         result = process_uploaded_files_pg(disbursed_df, collection_df, product)
-        logger.info(f"Uploaded {product}: {result['disbursed_count']} disbursed, {result['collection_count']} collection")
+        logger.info(
+            f"Uploaded {product}: "
+            f"{result['disbursed_inserted']} inserted/{result['disbursed_updated']} updated disbursed, "
+            f"{result['collection_inserted']} inserted/{result['collection_updated']} updated collection"
+        )
 
         return jsonify({
             "success": True,
             "product": result['product'],
-            "message": f"Product DB ready: {result['product']} ({result['disbursed_count']} disbursed, {result['collection_count']} collection records)"
+            "message": (
+                f"Product DB ready: {result['product']} ("
+                f"{result['disbursed_inserted']} inserted/{result['disbursed_updated']} updated disbursed, "
+                f"{result['collection_inserted']} inserted/{result['collection_updated']} updated collection)"
+            )
         })
 
     except Exception as e:
         logger.error(f"Upload error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/query", methods=["POST"])
+def run_query():
+    """Run SQL query (SELECT only) on PostgreSQL database."""
+    data = request.get_json()
+    query = data.get("query", "").strip()
+
+    if not query:
+        return jsonify({"error": "Query cannot be empty"}), 400
+
+    try:
+        result = run_sql_query_pg(query)
+        logger.info(f"Query executed: {query[:50]}... - {result['total_records']} records")
+        return jsonify(result)
+
+    except ValueError as e:
+        logger.warning(f"Query validation error: {e}")
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        logger.error(f"Query error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -126,6 +159,21 @@ def list_databases():
         return jsonify({"databases": products})
     except Exception as e:
         logger.error(f"Database list error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/columns/<table_name>", methods=["GET"])
+def get_columns(table_name):
+    """Get all columns for a specific table."""
+    try:
+        columns = get_table_columns(table_name)
+        return jsonify({
+            "table": table_name,
+            "columns": columns,
+            "total_columns": len(columns)
+        })
+    except Exception as e:
+        logger.error(f"Columns error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
