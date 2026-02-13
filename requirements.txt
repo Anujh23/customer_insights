@@ -1,4 +1,7 @@
-# Python version: 3.13.5
+# This project requires Python 3.13.5 or higher
+# To specify Python version, use: python -m pip install -r requirements.txt
+# Python version can also be set in runtime.txt or via environment variables
+
 Flask==3.0.2
 pandas==2.2.0
 python-dotenv==1.0.0
