@@ -461,3 +461,230 @@ def run_sql_query_pg(query: str) -> Dict[str, Any]:
                     'records': [],
                     'message': 'Query executed successfully'
                 }
+
+
+# Authentication and Logging Functions
+
+def create_users_table():
+    """Create users table for authentication."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) DEFAULT 'user',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP
+                )
+            """)
+            conn.commit()
+            logger.info("Users table created/verified")
+
+
+def create_activity_logs_table():
+    """Create activity logs table for tracking user actions."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS activity_logs (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) NOT NULL,
+                    action VARCHAR(50) NOT NULL,
+                    details TEXT,
+                    ip_address VARCHAR(45),
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+            logger.info("Activity logs table created/verified")
+
+
+def init_auth_tables():
+    """Initialize authentication tables."""
+    create_users_table()
+    create_activity_logs_table()
+
+
+def create_user(username: str, password: str, role: str = 'user') -> bool:
+    """Create a new user with hashed password."""
+    import hashlib
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("""
+                    INSERT INTO users (username, password_hash, role)
+                    VALUES (%s, %s, %s)
+                """, (username, password_hash, role))
+                conn.commit()
+                logger.info(f"User created: {username} (role: {role})")
+                return True
+            except psycopg2.IntegrityError:
+                logger.warning(f"Username already exists: {username}")
+                return False
+
+
+def admin_create_user(username: str, password: str, role: str = 'user', created_by: str = None) -> Dict[str, Any]:
+    """Admin creates a new user with generated password. Returns the generated password."""
+    import hashlib
+    import secrets
+    import string
+    
+    # Generate random password if not provided
+    if not password:
+        password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+    
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("""
+                    INSERT INTO users (username, password_hash, role)
+                    VALUES (%s, %s, %s)
+                """, (username, password_hash, role))
+                conn.commit()
+                
+                # Log admin activity
+                log_activity(created_by or 'admin', "CREATE_USER", f"Created user: {username} (role: {role})")
+                
+                logger.info(f"Admin created user: {username} (role: {role})")
+                return {
+                    'success': True,
+                    'username': username,
+                    'password': password,
+                    'role': role,
+                    'message': f"User '{username}' created successfully with password: {password}"
+                }
+            except psycopg2.IntegrityError:
+                logger.warning(f"Username already exists: {username}")
+                return {
+                    'success': False,
+                    'error': f"Username '{username}' already exists"
+                }
+
+
+def get_all_users() -> List[Dict[str, Any]]:
+    """Get all users (for admin)."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, username, role, created_at, last_login
+                FROM users
+                ORDER BY created_at DESC
+            """)
+            return [dict(row) for row in cur.fetchall()]
+
+
+def delete_user(username: str, deleted_by: str = None) -> bool:
+    """Delete a user (admin only)."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM users WHERE username = %s", (username,))
+            conn.commit()
+            
+            if cur.rowcount > 0:
+                log_activity(deleted_by or 'admin', "DELETE_USER", f"Deleted user: {username}")
+                logger.info(f"User deleted: {username}")
+                return True
+            return False
+
+
+def reset_user_password(username: str, new_password: str = None, reset_by: str = None) -> Dict[str, Any]:
+    """Reset user password (admin only). Returns the new password."""
+    import hashlib
+    import secrets
+    import string
+    
+    # Generate random password if not provided
+    if not new_password:
+        new_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+    
+    password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE users SET password_hash = %s
+                WHERE username = %s
+            """, (password_hash, username))
+            conn.commit()
+            
+            if cur.rowcount > 0:
+                log_activity(reset_by or 'admin', "RESET_PASSWORD", f"Reset password for: {username}")
+                logger.info(f"Password reset for user: {username}")
+                return {
+                    'success': True,
+                    'username': username,
+                    'new_password': new_password,
+                    'message': f"Password reset for '{username}'. New password: {new_password}"
+                }
+            return {
+                'success': False,
+                'error': f"User '{username}' not found"
+            }
+
+
+def verify_user(username: str, password: str) -> Optional[Dict[str, Any]]:
+    """Verify user credentials and return user info."""
+    import hashlib
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, username, role, created_at
+                FROM users
+                WHERE username = %s AND password_hash = %s
+            """, (username, password_hash))
+            
+            user = cur.fetchone()
+            if user:
+                # Update last login
+                cur.execute("""
+                    UPDATE users SET last_login = CURRENT_TIMESTAMP
+                    WHERE username = %s
+                """, (username,))
+                conn.commit()
+                return dict(user)
+            return None
+
+
+def log_activity(username: str, action: str, details: str = None, ip_address: str = None):
+    """Log user activity."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO activity_logs (username, action, details, ip_address)
+                VALUES (%s, %s, %s, %s)
+            """, (username, action, details, ip_address))
+            conn.commit()
+            logger.info(f"Activity logged: {username} - {action}")
+
+
+def get_user_logs(username: str = None, limit: int = 100) -> List[Dict[str, Any]]:
+    """Get activity logs for a user or all users."""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            if username:
+                cur.execute("""
+                    SELECT * FROM activity_logs
+                    WHERE username = %s
+                    ORDER BY timestamp DESC
+                    LIMIT %s
+                """, (username, limit))
+            else:
+                cur.execute("""
+                    SELECT * FROM activity_logs
+                    ORDER BY timestamp DESC
+                    LIMIT %s
+                """, (limit,))
+            
+            return [dict(row) for row in cur.fetchall()]
+
+
+# Initialize auth tables on module load
+init_auth_tables()

@@ -2,9 +2,11 @@
 # To specify Python version, use: python -m pip install -r requirements.txt
 # Python version can also be set in runtime.txt or via environment variables
 
-Flask==3.0.2
-pandas==2.2.0
+fastapi==0.109.0
+uvicorn==0.27.0
+python-multipart==0.0.6
+pandas>=2.3.1
 python-dotenv==1.0.0
-Werkzeug==3.0.1
-gunicorn==21.2.0
 psycopg2-binary==2.9.9
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4

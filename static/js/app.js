@@ -14,9 +14,42 @@ const icons = {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {
+    checkAuth();
     loadDatabases();
     setupEventListeners();
 });
+
+// Check authentication and load user info
+async function checkAuth() {
+    try {
+        const response = await fetch('/api/check-auth');
+        const data = await response.json();
+
+        if (data.authenticated) {
+            document.getElementById('username').textContent = data.username;
+        } else {
+            window.location.href = '/login';
+        }
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/login';
+    }
+}
+
+// Logout function
+async function logout() {
+    try {
+        const response = await fetch('/api/logout', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            window.location.href = '/login';
+        }
+    } catch (error) {
+        console.error('Logout failed:', error);
+        alert('Logout failed. Please try again.');
+    }
+}
 
 // Event Listeners
 function setupEventListeners() {
@@ -73,6 +106,15 @@ async function loadDatabases() {
     } catch (error) {
         document.getElementById('databasesList').innerHTML = '<span style="color: #ef4444;">Failed to load databases</span>';
     }
+}
+
+// Toggle Upload Section
+function toggleUploadSection() {
+    const content = document.getElementById('uploadContent');
+    const icon = document.getElementById('uploadToggleIcon');
+
+    content.classList.toggle('hidden');
+    icon.classList.toggle('expanded');
 }
 
 // Process files

@@ -31,11 +31,7 @@ ENV/
 .env.local
 .env.*.local
 
-# Flask
-instance/
-.webassets-cache
-
-# Database
+# FastAPI/Starlette
 *.db
 *.sqlite
 *.sqlite3
@@ -61,17 +57,16 @@ htmlcov/
 .tox/
 
 # Temporary files
+test/
 tmp/
 temp/
 *.tmp
 
-# Render specific
-render.yaml
-
-# Local data files (ignore test data)
-test/
+# Local data files
 *.csv
-
-# Export files
 export_result.csv
 query_result.csv
+
+# OS files
+Thumbs.db
+desktop.ini

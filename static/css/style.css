@@ -638,3 +638,47 @@ tr:hover td {
 .hidden {
     display: none !important;
 }
+
+/* Collapsible Card */
+.card-collapsible .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 16px 20px;
+    margin: -20px -20px 0 -20px;
+    border-radius: 12px 12px 0 0;
+    transition: background 0.2s ease;
+}
+
+.card-collapsible .card-header:hover {
+    background: #f8fafc;
+}
+
+.card-collapsible .card-header h2 {
+    margin: 0;
+}
+
+.card-collapsible .card-content {
+    padding-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.card-collapsible .card-content.hidden {
+    display: none;
+}
+
+#uploadToggleIcon {
+    transition: transform 0.3s ease;
+    color: #64748b;
+}
+
+#uploadToggleIcon.expanded {
+    transform: rotate(180deg);
+}
+
+/* Upload card at bottom styling */
+#uploadCard {
+    margin-top: 20px;
+    background: #f8fafc;
+}

@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer 360 Insight</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='360logo.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+    <link rel="icon" type="image/png" href="{{ url_for('static', path='360logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=2">
 </head>
 
 <body>
@@ -14,7 +14,7 @@
         <header>
             <div class="header-left">
                 <div class="logo-section">
-                    <img src="{{ url_for('static', filename='360logo.png') }}" alt="Logo" class="logo">
+                    <img src="{{ url_for('static', path='360logo.png') }}" alt="Logo" class="logo">
                     <div class="title-section">
                         <h1>Customer 360 Insight</h1>
                         <p>Payment Status & Analytics Dashboard</p>
@@ -28,54 +28,15 @@
                         <span style="color: #94a3b8;">Loading...</span>
                     </div>
                 </div>
+                <div class="user-section"
+                    style="display: flex; align-items: center; gap: 12px; margin-left: 20px; padding-left: 20px; border-left: 1px solid #e2e8f0;">
+                    <span id="username" style="font-weight: 500; color: #374151;"></span>
+                    <button class="btn btn-secondary" onclick="logout()" style="padding: 6px 12px; font-size: 12px;">
+                        Logout
+                    </button>
+                </div>
             </div>
         </header>
-
-        <!-- File Upload Section -->
-        <div class="card">
-            <h2>Upload Data Files</h2>
-            <div class="file-upload-grid">
-                <div class="form-group">
-                    <label>Disbursed CSV</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="disbursedFile" accept=".csv">
-                        <label for="disbursedFile" class="file-input-label" id="disbursedLabel">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <span class="file-name">Choose file</span>
-                            <span class="file-hint">Drop file here or click to browse</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Collection CSV</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="collectionFile" accept=".csv">
-                        <label for="collectionFile" class="file-input-label" id="collectionLabel">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <span class="file-name">Choose file</span>
-                            <span class="file-hint">Drop file here or click to browse</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="button-group">
-                <button class="btn" id="processBtn" onclick="processFiles()">
-                    <span id="processBtnText">Process Files</span>
-                </button>
-            </div>
-
-            <div id="uploadResult"></div>
-        </div>
 
         <!-- PAN Search Section -->
         <div class="card">
@@ -120,9 +81,63 @@
 
             <div id="queryResult"></div>
         </div>
+
+        <!-- File Upload Section (Minimized by default) -->
+        <div class="card card-collapsible" id="uploadCard">
+            <div class="card-header" onclick="toggleUploadSection()">
+                <h2>Update Data Files</h2>
+                <svg id="uploadToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div class="card-content hidden" id="uploadContent">
+                <div class="file-upload-grid">
+                    <div class="form-group">
+                        <label>Disbursed CSV</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="disbursedFile" accept=".csv">
+                            <label for="disbursedFile" class="file-input-label" id="disbursedLabel">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <span class="file-name">Choose file</span>
+                                <span class="file-hint">Drop file here or click to browse</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Collection CSV</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="collectionFile" accept=".csv">
+                            <label for="collectionFile" class="file-input-label" id="collectionLabel">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <span class="file-name">Choose file</span>
+                                <span class="file-hint">Drop file here or click to browse</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn" id="processBtn" onclick="processFiles()">
+                        <span id="processBtnText">Process Files</span>
+                    </button>
+                </div>
+
+                <div id="uploadResult"></div>
+            </div>
+        </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=2"></script>
+    <script src="{{ url_for('static', path='js/app.js') }}?v=2"></script>
 </body>
 
 </html>
