@@ -87,8 +87,10 @@ class SQLQueryRequest(BaseModel):
     query: str
 
 
-class PANSearchRequest(BaseModel):
-    pan: str
+class SearchRequest(BaseModel):
+    pan: Optional[str] = None
+    name: Optional[str] = None
+    mobile: Optional[str] = None
 
 
 class ExportRequest(BaseModel):
@@ -385,31 +387,34 @@ async def run_query(
 
 
 @app.post("/api/search")
-async def search_pan(
+async def search_records(
     request: Request,
-    search_data: PANSearchRequest,
+    search_data: SearchRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Search PAN across all products."""
-    pan = search_data.pan.strip()
-    
-    if not pan:
-        raise HTTPException(status_code=400, detail="PAN cannot be empty")
+    """Search records by PAN, Name, or Mobile across all products."""
+    # Check at least one search parameter provided
+    if not any([search_data.pan, search_data.name, search_data.mobile]):
+        raise HTTPException(status_code=400, detail="At least one search parameter (PAN, Name, or Mobile) is required")
     
     try:
-        result = search_pan_pg(pan)
+        result = search_pan_pg(
+            pan=search_data.pan,
+            name=search_data.name,
+            mobile=search_data.mobile
+        )
         
         log_activity(
             current_user["username"],
-            "PAN_SEARCH",
-            f"PAN: {pan}, Records: {result['total_records']}",
+            "SEARCH",
+            f"PAN: {search_data.pan}, Name: {search_data.name}, Mobile: {search_data.mobile}, Records: {result['total_records']}",
             get_client_ip(request)
         )
         
-        logger.info(f"PAN search: {pan} - {result['total_records']} records found")
+        logger.info(f"Search completed - {result['total_records']} records found")
         return result
     except Exception as e:
-        logger.error(f"PAN search error: {e}")
+        logger.error(f"Search error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

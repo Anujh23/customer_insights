@@ -46,6 +46,22 @@ def normalize_upload_columns(df: pd.DataFrame) -> pd.DataFrame:
         # disbursed
         'pancard': 'Pancard',
         'pan': 'Pancard',
+        'name': 'Name',
+        'customername': 'Name',
+        'customer_name': 'Name',
+        'fullname': 'Name',
+        'full_name': 'Name',
+        'applicantname': 'Name',
+        'applicant_name': 'Name',
+        'mobile': 'Mobile',
+        'phone': 'Mobile',
+        'mobileno': 'Mobile',
+        'mobile_no': 'Mobile',
+        'phonenumber': 'Mobile',
+        'phone_number': 'Mobile',
+        'contact': 'Mobile',
+        'contactno': 'Mobile',
+        'contact_no': 'Mobile',
         'repay_date': 'Repay_Date',
         'repayment_date': 'Repay_Date',
         'loan_amount': 'LoanAmount',
@@ -382,10 +398,19 @@ def determine_payment_status(collected_date: Optional[datetime], repay_date: Opt
         return "LATE"
 
 
-def search_pan_pg(pan: str, case_sensitive: bool = False) -> Dict[str, Any]:
-    """Search PAN across all product tables in PostgreSQL."""
+def search_pan_pg(pan: str = None, name: str = None, mobile: str = None, case_sensitive: bool = False) -> Dict[str, Any]:
+    """Search records by PAN, Name, or Mobile across all product tables in PostgreSQL."""
     products = list_products_pg()
     all_results = []
+    
+    # Check if at least one search parameter is provided
+    if not any([pan, name, mobile]):
+        return {
+            'success': False,
+            'error': 'At least one search parameter (PAN, Name, or Mobile) is required',
+            'total_records': 0,
+            'records': []
+        }
 
     with get_db_connection() as conn:
         for product in products:
@@ -394,14 +419,32 @@ def search_pan_pg(pan: str, case_sensitive: bool = False) -> Dict[str, Any]:
 
             try:
                 with conn.cursor() as cur:
-                    cur.execute(f"""
+                    # Build WHERE clause dynamically
+                    where_conditions = []
+                    params = []
+                    
+                    if pan:
+                        where_conditions.append('LOWER(d."Pancard") = LOWER(%s)')
+                        params.append(pan)
+                    if name:
+                        where_conditions.append('LOWER(d."Name") LIKE LOWER(%s)')
+                        params.append(f'%{name}%')
+                    if mobile:
+                        where_conditions.append('LOWER(d."Mobile") = LOWER(%s)')
+                        params.append(mobile)
+                    
+                    where_clause = ' OR '.join(where_conditions)
+                    
+                    query = f"""
                         SELECT d.*, c."Collected_Date", c."Collected_Amount"
                         FROM {disbursed_table} d
                         LEFT JOIN {collection_table} c 
                             ON d."LeadID" = c."LeadID" AND d."Loan_No" = c."Loan_No"
-                        WHERE LOWER(d."Pancard") = LOWER(%s)
+                        WHERE {where_clause}
                         ORDER BY d."Repay_Date"
-                    """, (pan,))
+                    """
+                    
+                    cur.execute(query, tuple(params))
 
                     for row in cur.fetchall():
                         result = dict(row)
@@ -423,6 +466,8 @@ def search_pan_pg(pan: str, case_sensitive: bool = False) -> Dict[str, Any]:
     return {
         'success': True,
         'pan': pan,
+        'name': name,
+        'mobile': mobile,
         'total_records': len(all_results),
         'records': all_results
     }

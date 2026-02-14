@@ -38,20 +38,65 @@
             </div>
         </header>
 
-        <!-- PAN Search Section -->
-        <div class="card">
-            <h2>PAN Search</h2>
-            <div class="search-row">
-                <div class="form-group">
-                    <label>PAN Number</label>
-                    <input type="text" id="panInput">
+        <!-- Search Section -->
+        <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 10px; border-radius: 10px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
                 </div>
-                <button class="btn" id="searchBtn" onclick="searchPAN()">
-                    <span id="searchBtnText">Search</span>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px;">Search Records</h2>
+            </div>
+            <p style="color: #64748b; margin: 0 0 24px 54px; font-size: 14px; font-weight: 400;">
+                Search by <strong style="color: #3b82f6;">PAN</strong>, <strong style="color: #3b82f6;">Name</strong>, or <strong style="color: #3b82f6;">Mobile</strong> across all products
+            </p>
+            
+            <div class="search-row" style="align-items: flex-end; gap: 16px;">
+                <div class="form-group" style="flex: 1; margin: 0;">
+                    <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block;">
+                        Search Term
+                    </label>
+                    <div style="position: relative;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%);">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="Enter PAN, Name, or Mobile..." 
+                            style="padding-left: 42px; height: 48px; font-size: 15px; border: 2px solid #e2e8f0; border-radius: 10px; width: 100%; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';" 
+                            onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="width: 150px; margin: 0;">
+                    <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block;">
+                        Search By
+                    </label>
+                    <select id="searchType" 
+                        style="height: 48px; font-size: 14px; cursor: pointer; border: 2px solid #e2e8f0; border-radius: 10px; padding: 0 12px; width: 100%; background: white; transition: all 0.2s;"
+                        onfocus="this.style.borderColor='#3b82f6';" 
+                        onblur="this.style.borderColor='#e2e8f0';">
+                        <option value="pan">🔍 PAN Number</option>
+                        <option value="name">👤 Customer Name</option>
+                        <option value="mobile">📱 Mobile Number</option>
+                    </select>
+                </div>
+                
+                <button class="btn" id="searchBtn" onclick="searchRecords()" 
+                    style="height: 48px; padding: 0 32px; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4), 0 2px 4px -1px rgba(59, 130, 246, 0.2); transition: all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 12px -2px rgba(59, 130, 246, 0.5)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(59, 130, 246, 0.4)'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <span id="searchBtnText" style="color: white;">Search</span>
                 </button>
             </div>
 
-            <div id="searchResult"></div>
+            <div id="searchResult" style="margin-top: 24px;"></div>
         </div>
 
         <!-- SQL Query Section -->

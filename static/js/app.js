@@ -196,6 +196,43 @@ async function searchPAN() {
     }
 }
 
+// Search Records (PAN, Name, or Mobile)
+async function searchRecords() {
+    const searchType = document.getElementById('searchType').value;
+    const searchValue = document.getElementById('searchInput').value.trim();
+
+    if (!searchValue) {
+        showAlert('searchResult', `Please enter a ${searchType.toUpperCase()}`, 'error');
+        return;
+    }
+
+    setButtonLoading('searchBtn', 'searchBtnText', true);
+
+    // Build request body based on search type
+    const requestBody = {};
+    requestBody[searchType] = searchValue;
+
+    try {
+        const response = await fetch('/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            currentResults = data.records;
+            displayResults('searchResult', data.records, searchValue, data.total_records, false);
+        } else {
+            showAlert('searchResult', data.error || 'Search failed', 'error');
+        }
+    } catch (error) {
+        showAlert('searchResult', 'Network error: ' + error.message, 'error');
+    } finally {
+        setButtonLoading('searchBtn', 'searchBtnText', false);
+    }
+}
+
 // Run SQL query (SELECT only)
 async function runQuery() {
     const query = document.getElementById('sqlInput').value.trim();
