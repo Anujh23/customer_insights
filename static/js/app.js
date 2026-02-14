@@ -1,6 +1,7 @@
 // Customer 360 Insight - JavaScript Application
 
 let currentResults = [];
+let userRole = null;
 
 // Icons SVG
 const icons = {
@@ -27,12 +28,22 @@ async function checkAuth() {
 
         if (data.authenticated) {
             document.getElementById('username').textContent = data.username;
+            userRole = data.role;
+            showAdminSections();
         } else {
             window.location.href = '/login';
         }
     } catch (error) {
         console.error('Auth check failed:', error);
         window.location.href = '/login';
+    }
+}
+
+// Show/hide admin-only sections
+function showAdminSections() {
+    const uploadCard = document.getElementById('uploadCard');
+    if (uploadCard) {
+        uploadCard.style.display = userRole === 'admin' ? 'block' : 'none';
     }
 }
 

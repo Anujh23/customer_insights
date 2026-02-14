@@ -313,7 +313,7 @@ async def upload_files(
     request: Request,
     disbursed: UploadFile = File(...),
     collection: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_admin_user)
 ):
     """Upload disbursed and collection CSVs."""
     try:
